@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# 运行产物（每次跑都会变，不入库）
+dirscan.log
+dirscan_result.csv
+result.csv
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 个人求职材料，不进公开仓库
+项目经历条目.md
