@@ -51,6 +51,41 @@ python dirscan.py --url http://127.0.0.1/dvwa --wordlist wordlist.txt --workers 
 
 结论：并发带来约 **9.9 倍**加速，结果与单线程完全一致；限流参数生效后速率被稳定压在设定值附近。
 
+## 复现实测数据
+
+### 方式一：一键复现（推荐）
+
+```bash
+python reproduce.py
+```
+
+脚本会自动启动本地模拟靶场、依次跑完三种配置、打印对照表，最后自动关闭靶场。全程只访问 `127.0.0.1`。
+
+### 方式二：手动复现（开两个终端）
+
+终端 A —— 启动模拟靶场，**保持运行不要关**：
+
+```bash
+python mock_target.py --port 8899 --delay 0.15
+```
+
+终端 B —— 依次执行三次扫描：
+
+```bash
+# 1. 单线程基准（耗时最长）
+python dirscan.py --url http://127.0.0.1:8899 --wordlist wordlist.txt --workers 1 --rate 1000
+
+# 2. 10 线程并发（应显著变快）
+python dirscan.py --url http://127.0.0.1:8899 --wordlist wordlist.txt --workers 10 --rate 1000
+
+# 3. 10 线程 + 限流 30/秒（速率被压住，耗时介于两者之间）
+python dirscan.py --url http://127.0.0.1:8899 --wordlist wordlist.txt --workers 10 --rate 30
+```
+
+每次运行结束都会打印「总计请求 / 命中 / 失败」与「耗时 / 平均速率」。三次的命中数应当完全一致，耗时差异就是并发带来的收益。
+
+> 复现要点：数值会随 CPU 与机器负载浮动，**量级一致**即算成功；真正要观察到的是「10 线程明显快于单线程」和「限流参数生效后速率被压下来」这两个现象。
+
 ## 一次真实的观察
 
 词表里的 `admin` 与 `admin/` 返回结果不同——前者 404，后者 301。目录探测时必须带上结尾斜杠，否则会漏掉真实的目录。
@@ -60,6 +95,7 @@ python dirscan.py --url http://127.0.0.1/dvwa --wordlist wordlist.txt --workers 
 ```
 dirscan/
 ├── dirscan.py                主脚本
+├── reproduce.py              一键复现实测数据
 ├── mock_target.py            本地模拟靶场（自测用）
 ├── wordlist.txt              词典（299 条）
 ├── examples/                 实测记录与结果样例
